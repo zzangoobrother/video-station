@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { apiGet } from '@/lib/api';
+import { formatDuration, formatDate } from '@/lib/format';
 import type { PlaylistResponse, PageResponse } from '@/types';
 
 export default function AdminPlaylistsPage() {
@@ -44,12 +45,10 @@ export default function AdminPlaylistsPage() {
                   </Link>
                 </td>
                 <td className="px-4 py-3">{pl.videoCount}개</td>
-                <td className="px-4 py-3">
-                  {Math.floor(pl.totalDurationSeconds / 60)}분
-                </td>
+                <td className="px-4 py-3">{formatDuration(pl.totalDurationSeconds)}</td>
                 <td className="px-4 py-3">{pl.isPublic ? '공개' : '비공개'}</td>
                 <td className="px-4 py-3 text-sm text-gray-500">
-                  {new Date(pl.createdAt).toLocaleDateString('ko-KR')}
+                  {formatDate(pl.createdAt)}
                 </td>
               </tr>
             ))}

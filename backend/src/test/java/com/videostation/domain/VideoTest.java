@@ -90,8 +90,8 @@ class VideoTest {
 
     @Test
     @DisplayName("Object Storage 키 설정")
-    void setObjectStorageKey() {
-        video.setObjectStorageKey("backup/test.mp4");
+    void updateObjectStorageKey() {
+        video.updateObjectStorageKey("backup/test.mp4");
 
         assertThat(video.getObjectStorageKey()).isEqualTo("backup/test.mp4");
     }

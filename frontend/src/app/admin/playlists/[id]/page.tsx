@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { apiGet, apiPut, apiPost, apiDelete } from '@/lib/api';
+import { formatDuration } from '@/lib/format';
 import type { PlaylistDetailResponse, VideoResponse, PageResponse } from '@/types';
 
 export default function PlaylistDetailPage() {
@@ -113,7 +114,7 @@ export default function PlaylistDetailPage() {
             <p className="text-gray-600 mt-1">{playlist.description}</p>
             <div className="flex gap-4 mt-2 text-sm text-gray-500">
               <span>{playlist.videoCount}개 영상</span>
-              <span>{Math.floor(playlist.totalDurationSeconds / 60)}분</span>
+              <span>{formatDuration(playlist.totalDurationSeconds)}</span>
               <span>{playlist.isPublic ? '공개' : '비공개'}</span>
             </div>
           </div>
@@ -136,7 +137,7 @@ export default function PlaylistDetailPage() {
             <div className="flex-1">
               <p className="font-medium">{item.video.title}</p>
               <p className="text-sm text-gray-500">
-                {item.video.durationSeconds ? `${Math.floor(item.video.durationSeconds / 60)}분 ${item.video.durationSeconds % 60}초` : '-'}
+                {formatDuration(item.video.durationSeconds)}
               </p>
             </div>
             <div className="flex gap-1">

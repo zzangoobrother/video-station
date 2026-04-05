@@ -7,8 +7,8 @@ import type { TokenResponse } from '@/types';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@test.com');
-  const [password, setPassword] = useState('admin1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,8 +19,8 @@ export default function LoginPage() {
       setAccessToken(data.accessToken);
       localStorage.setItem('accessToken', data.accessToken);
       router.push('/admin/videos');
-    } catch (err: any) {
-      setError(err.message || '로그인 실패');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '로그인 실패');
     }
   };
 

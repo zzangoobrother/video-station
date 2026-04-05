@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { apiGet } from '@/lib/api';
+import { formatDate } from '@/lib/format';
 import type { VideoResponse, PageResponse } from '@/types';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -71,7 +72,7 @@ export default function AdminVideosPage() {
                   <td className="px-4 py-3">{video.isPublic ? '공개' : '비공개'}</td>
                   <td className="px-4 py-3">{video.viewCount}</td>
                   <td className="px-4 py-3 text-sm text-gray-500">
-                    {new Date(video.createdAt).toLocaleDateString('ko-KR')}
+                    {formatDate(video.createdAt)}
                   </td>
                 </tr>
               );

@@ -52,4 +52,11 @@ public class Playlist extends BaseEntity {
         this.description = description;
         this.isPublic = isPublic;
     }
+
+    public int getTotalDurationSeconds() {
+        return playlistVideos.stream()
+                .filter(pv -> pv.getVideo().getDurationSeconds() != null)
+                .mapToInt(pv -> pv.getVideo().getDurationSeconds())
+                .sum();
+    }
 }

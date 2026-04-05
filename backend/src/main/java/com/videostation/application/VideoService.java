@@ -8,6 +8,7 @@ import com.videostation.domain.constant.VideoStatus;
 import com.videostation.event.VideoUploadedEvent;
 import com.videostation.global.error.BusinessException;
 import com.videostation.global.error.ErrorCode;
+import com.videostation.persistence.UserRepository;
 import com.videostation.persistence.VideoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,11 +26,13 @@ import java.nio.file.Path;
 public class VideoService {
 
     private final VideoRepository videoRepository;
+    private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public VideoResponse upload(MultipartFile file, String title, String description, String tags, User uploader) {
+    public VideoResponse upload(MultipartFile file, String title, String description, String tags, Long uploaderId) {
+        User uploader = userRepository.getReferenceById(uploaderId);
         Path filePath = fileStorageService.storeOriginal(file);
 
         Video video = Video.create(title, description, tags,

@@ -17,9 +17,13 @@ public enum ErrorCode {
 
     // 동영상
     VIDEO_NOT_FOUND(HttpStatus.NOT_FOUND, "VIDEO_001", "동영상을 찾을 수 없습니다"),
+    DUPLICATE_PLAYLIST_VIDEO(HttpStatus.CONFLICT, "VIDEO_002", "이미 재생목록에 포함된 영상입니다"),
 
     // 재생목록
     PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYLIST_001", "재생목록을 찾을 수 없습니다"),
+
+    // 파일
+    FILE_STORAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_001", "파일 저장에 실패했습니다"),
 
     // 공통
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "COMMON_001", "잘못된 입력입니다"),

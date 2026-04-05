@@ -1,16 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { getAccessToken } from '@/lib/api';
 
 const navItems = [
   { href: '/admin/videos', label: '동영상 관리' },
   { href: '/admin/playlists', label: '재생목록 관리' },
-  { href: '/admin/users', label: '사용자 관리' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!getAccessToken()) {
+      router.replace('/login');
+    }
+  }, [router]);
+
+  if (!getAccessToken()) return null;
 
   return (
     <div className="flex min-h-screen">

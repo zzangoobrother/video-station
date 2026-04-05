@@ -10,6 +10,7 @@ import com.videostation.global.error.BusinessException;
 import com.videostation.global.error.ErrorCode;
 import com.videostation.persistence.PlaylistRepository;
 import com.videostation.persistence.PlaylistVideoRepository;
+import com.videostation.persistence.UserRepository;
 import com.videostation.persistence.VideoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +49,9 @@ class PlaylistServiceTest {
     @Mock
     private VideoRepository videoRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     private User admin;
 
     @BeforeEach
@@ -75,9 +79,10 @@ class PlaylistServiceTest {
         var request = new PlaylistRequest("새 목록", "설명", false);
         var saved = createPlaylist(1L, "새 목록");
 
+        given(userRepository.getReferenceById(1L)).willReturn(admin);
         given(playlistRepository.save(any(Playlist.class))).willReturn(saved);
 
-        PlaylistResponse response = playlistService.create(request, admin);
+        PlaylistResponse response = playlistService.create(request, 1L);
 
         assertThat(response.name()).isEqualTo("새 목록");
     }
@@ -147,7 +152,7 @@ class PlaylistServiceTest {
 
         given(playlistRepository.findById(1L)).willReturn(Optional.of(playlist));
         given(videoRepository.findById(10L)).willReturn(Optional.of(video));
-        given(playlistVideoRepository.countByPlaylistId(1L)).willReturn(0);
+        given(playlistVideoRepository.existsByPlaylistIdAndVideoId(1L, 10L)).willReturn(false);
 
         PlaylistDetailResponse response = playlistService.addVideo(1L, 10L);
 

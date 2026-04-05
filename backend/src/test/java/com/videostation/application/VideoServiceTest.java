@@ -8,6 +8,7 @@ import com.videostation.domain.constant.VideoStatus;
 import com.videostation.event.VideoUploadedEvent;
 import com.videostation.global.error.BusinessException;
 import com.videostation.global.error.ErrorCode;
+import com.videostation.persistence.UserRepository;
 import com.videostation.persistence.VideoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,6 +44,9 @@ class VideoServiceTest {
     private VideoRepository videoRepository;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private FileStorageService fileStorageService;
 
     @Mock
@@ -71,10 +75,11 @@ class VideoServiceTest {
         var file = new MockMultipartFile("file", "test.mp4", "video/mp4", "data".getBytes());
         var savedVideo = createVideo(1L, "테스트 영상", VideoStatus.ENCODING_QUEUED);
 
+        given(userRepository.getReferenceById(1L)).willReturn(admin);
         given(fileStorageService.storeOriginal(file)).willReturn(java.nio.file.Path.of("/data/videos/originals/test.mp4"));
         given(videoRepository.save(any(Video.class))).willReturn(savedVideo);
 
-        VideoResponse response = videoService.upload(file, "테스트 영상", "설명", "태그", admin);
+        VideoResponse response = videoService.upload(file, "테스트 영상", "설명", "태그", 1L);
 
         assertThat(response.title()).isEqualTo("테스트 영상");
         then(eventPublisher).should().publishEvent(any(VideoUploadedEvent.class));

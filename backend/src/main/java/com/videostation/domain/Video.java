@@ -91,7 +91,7 @@ public class Video extends BaseEntity {
         this.viewCount++;
     }
 
-    public void setObjectStorageKey(String key) {
+    public void updateObjectStorageKey(String key) {
         this.objectStorageKey = key;
     }
 }

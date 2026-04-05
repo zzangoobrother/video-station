@@ -9,6 +9,7 @@ import com.videostation.global.error.BusinessException;
 import com.videostation.global.error.ErrorCode;
 import com.videostation.persistence.PlaylistRepository;
 import com.videostation.persistence.PlaylistVideoRepository;
+import com.videostation.persistence.UserRepository;
 import com.videostation.persistence.VideoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,9 +30,11 @@ public class PlaylistService {
     private final PlaylistRepository playlistRepository;
     private final PlaylistVideoRepository playlistVideoRepository;
     private final VideoRepository videoRepository;
+    private final UserRepository userRepository;
 
     @Transactional
-    public PlaylistResponse create(PlaylistRequest request, User creator) {
+    public PlaylistResponse create(PlaylistRequest request, Long creatorId) {
+        User creator = userRepository.getReferenceById(creatorId);
         Playlist playlist = Playlist.create(
                 request.name(), request.description(),
                 request.isPublic() != null && request.isPublic(), creator
@@ -67,7 +70,11 @@ public class PlaylistService {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.VIDEO_NOT_FOUND));
 
-        int nextOrder = playlistVideoRepository.countByPlaylistId(playlistId);
+        if (playlistVideoRepository.existsByPlaylistIdAndVideoId(playlistId, videoId)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_PLAYLIST_VIDEO);
+        }
+
+        int nextOrder = playlist.getPlaylistVideos().size();
         PlaylistVideo pv = PlaylistVideo.create(playlist, video, nextOrder);
         playlist.getPlaylistVideos().add(pv);
 

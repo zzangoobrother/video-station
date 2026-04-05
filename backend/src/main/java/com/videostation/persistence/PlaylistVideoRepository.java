@@ -12,5 +12,7 @@ public interface PlaylistVideoRepository extends JpaRepository<PlaylistVideo, Lo
 
     Optional<PlaylistVideo> findByPlaylistIdAndVideoId(Long playlistId, Long videoId);
 
+    boolean existsByPlaylistIdAndVideoId(Long playlistId, Long videoId);
+
     int countByPlaylistId(Long playlistId);
 }

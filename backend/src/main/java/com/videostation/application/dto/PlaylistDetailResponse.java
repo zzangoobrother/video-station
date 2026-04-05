@@ -22,11 +22,6 @@ public record PlaylistDetailResponse(
                 .map(pv -> new PlaylistVideoResponse(pv.getSortOrder(), VideoResponse.from(pv.getVideo())))
                 .toList();
 
-        int totalDuration = playlist.getPlaylistVideos().stream()
-                .filter(pv -> pv.getVideo().getDurationSeconds() != null)
-                .mapToInt(pv -> pv.getVideo().getDurationSeconds())
-                .sum();
-
         return new PlaylistDetailResponse(
                 playlist.getId(),
                 playlist.getName(),
@@ -34,7 +29,7 @@ public record PlaylistDetailResponse(
                 playlist.getThumbnailUrl(),
                 playlist.getIsPublic(),
                 videos.size(),
-                totalDuration,
+                playlist.getTotalDurationSeconds(),
                 UserResponse.from(playlist.getCreatedByUser()),
                 playlist.getCreatedAt(),
                 videos

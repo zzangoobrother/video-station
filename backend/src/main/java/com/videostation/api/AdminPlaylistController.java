@@ -2,10 +2,9 @@ package com.videostation.api;
 
 import com.videostation.application.PlaylistService;
 import com.videostation.application.dto.*;
-import com.videostation.domain.User;
 import com.videostation.global.auth.UserPrincipal;
-import com.videostation.persistence.UserRepository;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,22 +14,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/v1/admin/playlists")
 @RequiredArgsConstructor
 public class AdminPlaylistController {
 
     private final PlaylistService playlistService;
-    private final UserRepository userRepository;
 
     @PostMapping
     public ResponseEntity<PlaylistResponse> create(
             @Valid @RequestBody PlaylistRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        User creator = userRepository.getReferenceById(principal.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(playlistService.create(request, creator));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(playlistService.create(request, principal.getId()));
     }
 
     @GetMapping
@@ -59,8 +55,8 @@ public class AdminPlaylistController {
     @PostMapping("/{playlistId}/videos")
     public ResponseEntity<PlaylistDetailResponse> addVideo(
             @PathVariable Long playlistId,
-            @RequestBody Map<String, Long> body) {
-        return ResponseEntity.ok(playlistService.addVideo(playlistId, body.get("videoId")));
+            @Valid @RequestBody AddVideoRequest request) {
+        return ResponseEntity.ok(playlistService.addVideo(playlistId, request.videoId()));
     }
 
     @DeleteMapping("/{playlistId}/videos/{videoId}")
@@ -77,4 +73,6 @@ public class AdminPlaylistController {
             @Valid @RequestBody ReorderRequest request) {
         return ResponseEntity.ok(playlistService.reorder(playlistId, request));
     }
+
+    public record AddVideoRequest(@NotNull Long videoId) {}
 }

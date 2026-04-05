@@ -50,9 +50,7 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
-        }
+        validateActive(user);
 
         String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtProvider.createRefreshToken(user.getId());
@@ -69,17 +67,26 @@ public class AuthService {
         }
 
         Long userId = jwtProvider.getUserId(refreshToken);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = findUser(userId);
+        validateActive(user);
 
         String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole());
         return new TokenResponse(accessToken, ACCESS_TOKEN_EXPIRY_SECONDS);
     }
 
     public UserResponse getMe(Long userId) {
-        User user = userRepository.findById(userId)
+        return UserResponse.from(findUser(userId));
+    }
+
+    private User findUser(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        return UserResponse.from(user);
+    }
+
+    private void validateActive(User user) {
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
+        }
     }
 
     public record LoginResult(TokenResponse tokenResponse, String refreshToken) {}

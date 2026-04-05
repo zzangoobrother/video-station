@@ -3,10 +3,8 @@ package com.videostation.api;
 import com.videostation.application.VideoService;
 import com.videostation.application.dto.VideoResponse;
 import com.videostation.application.dto.VideoUpdateRequest;
-import com.videostation.domain.User;
 import com.videostation.domain.constant.VideoStatus;
 import com.videostation.global.auth.UserPrincipal;
-import com.videostation.persistence.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class AdminVideoController {
 
     private final VideoService videoService;
-    private final UserRepository userRepository;
 
     @PostMapping
     public ResponseEntity<VideoResponse> upload(
@@ -33,10 +30,8 @@ public class AdminVideoController {
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "tags", required = false) String tags,
             @AuthenticationPrincipal UserPrincipal principal) {
-
-        User uploader = userRepository.getReferenceById(principal.getId());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(videoService.upload(file, title, description, tags, uploader));
+                .body(videoService.upload(file, title, description, tags, principal.getId()));
     }
 
     @GetMapping

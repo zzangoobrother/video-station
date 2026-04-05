@@ -13,7 +13,6 @@ export default function UploadPage() {
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [dragOver, setDragOver] = useState(false);
 
   const handleFile = (f: File) => {

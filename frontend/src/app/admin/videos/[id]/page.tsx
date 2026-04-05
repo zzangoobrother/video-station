@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { apiGet, apiPut, apiDelete, apiPatch } from '@/lib/api';
+import { formatDuration, formatFileSize, formatDate } from '@/lib/format';
 import type { VideoResponse } from '@/types';
 
 export default function VideoDetailPage() {
@@ -98,13 +99,13 @@ export default function VideoDetailPage() {
             <p className="text-gray-600">{video.description}</p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div><span className="text-gray-500">파일명:</span> {video.originalFileName}</div>
-              <div><span className="text-gray-500">크기:</span> {video.fileSize ? `${(video.fileSize / 1024 / 1024).toFixed(1)} MB` : '-'}</div>
+              <div><span className="text-gray-500">크기:</span> {formatFileSize(video.fileSize)}</div>
               <div><span className="text-gray-500">상태:</span> {video.status}</div>
               <div><span className="text-gray-500">공개:</span> {video.isPublic ? '공개' : '비공개'}</div>
               <div><span className="text-gray-500">조회수:</span> {video.viewCount}</div>
-              <div><span className="text-gray-500">재생시간:</span> {video.durationSeconds ? `${Math.floor(video.durationSeconds / 60)}분 ${video.durationSeconds % 60}초` : '-'}</div>
+              <div><span className="text-gray-500">재생시간:</span> {formatDuration(video.durationSeconds)}</div>
               <div><span className="text-gray-500">태그:</span> {video.tags || '-'}</div>
-              <div><span className="text-gray-500">등록일:</span> {new Date(video.createdAt).toLocaleString('ko-KR')}</div>
+              <div><span className="text-gray-500">등록일:</span> {formatDate(video.createdAt)}</div>
             </div>
           </>
         )}

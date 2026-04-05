@@ -70,7 +70,7 @@ public class ObjectStorageService {
                     Path.of(originalFilePath)
             );
 
-            videoRepository.findById(videoId).ifPresent(video -> video.setObjectStorageKey(key));
+            videoRepository.findById(videoId).ifPresent(video -> video.updateObjectStorageKey(key));
             log.info("Object Storage 백업 완료: videoId={}, key={}", videoId, key);
         } catch (Exception e) {
             log.error("Object Storage 백업 실패: videoId={}", videoId, e);

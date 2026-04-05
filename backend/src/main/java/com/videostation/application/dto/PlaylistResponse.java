@@ -16,20 +16,14 @@ public record PlaylistResponse(
         LocalDateTime createdAt
 ) {
     public static PlaylistResponse from(Playlist playlist) {
-        int videoCount = playlist.getPlaylistVideos().size();
-        int totalDuration = playlist.getPlaylistVideos().stream()
-                .filter(pv -> pv.getVideo().getDurationSeconds() != null)
-                .mapToInt(pv -> pv.getVideo().getDurationSeconds())
-                .sum();
-
         return new PlaylistResponse(
                 playlist.getId(),
                 playlist.getName(),
                 playlist.getDescription(),
                 playlist.getThumbnailUrl(),
                 playlist.getIsPublic(),
-                videoCount,
-                totalDuration,
+                playlist.getPlaylistVideos().size(),
+                playlist.getTotalDurationSeconds(),
                 UserResponse.from(playlist.getCreatedByUser()),
                 playlist.getCreatedAt()
         );

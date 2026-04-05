@@ -2,7 +2,6 @@ package com.videostation.encoding;
 
 import com.videostation.event.EncodingCompletedEvent;
 import com.videostation.event.EncodingFailedEvent;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -13,16 +12,19 @@ import java.util.concurrent.Semaphore;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class EncodingQueue {
 
     private final FFmpegEncoder ffmpegEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final Semaphore semaphore;
 
-    @Value("${encoding.max-concurrent}")
-    private int maxConcurrent;
-
-    private final Semaphore semaphore = new Semaphore(2);
+    public EncodingQueue(FFmpegEncoder ffmpegEncoder,
+                         ApplicationEventPublisher eventPublisher,
+                         @Value("${encoding.max-concurrent}") int maxConcurrent) {
+        this.ffmpegEncoder = ffmpegEncoder;
+        this.eventPublisher = eventPublisher;
+        this.semaphore = new Semaphore(maxConcurrent);
+    }
 
     @Async
     public void enqueue(Long videoId, String originalFilePath) {
@@ -30,10 +32,8 @@ public class EncodingQueue {
             semaphore.acquire();
             log.info("인코딩 시작: videoId={}", videoId);
 
-            // 영상 길이 추출
             Integer duration = ffmpegEncoder.probeDuration(originalFilePath);
 
-            // HLS 인코딩
             String[] encodeCommand = ffmpegEncoder.buildEncodeCommand(videoId, originalFilePath);
             int exitCode = ffmpegEncoder.execute(encodeCommand);
 
@@ -41,7 +41,6 @@ public class EncodingQueue {
                 throw new RuntimeException("FFmpeg 인코딩 실패: exit code " + exitCode);
             }
 
-            // 썸네일 추출
             String[] thumbnailCommand = ffmpegEncoder.buildThumbnailCommand(videoId, originalFilePath);
             ffmpegEncoder.execute(thumbnailCommand);
 
