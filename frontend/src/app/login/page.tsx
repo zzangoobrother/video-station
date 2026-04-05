@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { apiPost, setAccessToken } from '@/lib/api';
 import type { TokenResponse } from '@/types';
 
@@ -17,8 +18,7 @@ export default function LoginPage() {
     try {
       const data = await apiPost<TokenResponse>('/api/v1/auth/login', { email, password });
       setAccessToken(data.accessToken);
-      localStorage.setItem('accessToken', data.accessToken);
-      router.push('/admin/videos');
+      router.push('/videos');
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인 실패');
     }
@@ -42,6 +42,9 @@ export default function LoginPage() {
         <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
           로그인
         </button>
+        <p className="text-center text-sm text-gray-500">
+          계정이 없나요? <Link href="/register" className="text-blue-600 hover:underline">회원가입</Link>
+        </p>
       </form>
     </div>
   );
