@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: video-station
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/video_station?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: ${DB_USERNAME:videostation}
+    password: ${DB_PASSWORD:videostation1234}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    open-in-view: false
+
+  servlet:
+    multipart:
+      max-file-size: 5GB
+      max-request-size: 5GB
+
+jwt:
+  secret: ${JWT_SECRET:dmlkZW9zdGF0aW9uLWp3dC1zZWNyZXQta2V5LXRoYXQtaXMtbG9uZy1lbm91Z2g=}
+  access-token-expiry: 1800000
+  refresh-token-expiry: 604800000
+
+storage:
+  originals-path: ${STORAGE_ORIGINALS:/data/videos/originals}
+  encoded-path: ${STORAGE_ENCODED:/data/videos/encoded}
+  thumbnails-path: ${STORAGE_THUMBNAILS:/data/videos/thumbnails}
+
+encoding:
+  max-concurrent: 2
+  ffmpeg-path: ${FFMPEG_PATH:ffmpeg}
+
+ncp:
+  object-storage:
+    enabled: ${NCP_OS_ENABLED:false}
+    endpoint: ${NCP_OS_ENDPOINT:https://kr.object.ncloudstorage.com}
+    region: ${NCP_OS_REGION:kr-standard}
+    access-key: ${NCP_OS_ACCESS_KEY:}
+    secret-key: ${NCP_OS_SECRET_KEY:}
+    bucket: ${NCP_OS_BUCKET:video-station-backup}
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.videostation: DEBUG
+    org.hibernate.SQL: DEBUG

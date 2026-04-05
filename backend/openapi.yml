@@ -1,0 +1,899 @@
+openapi: 3.1.0
+info:
+  title: Video Station API
+  version: 1.0.0
+  description: VOD 스트리밍 서비스 API
+
+servers:
+  - url: http://localhost:8080
+    description: 로컬 개발 서버
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # === 공통 ===
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        code:
+          type: string
+        message:
+          type: string
+
+    PageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items: {}
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+
+    # === 인�� ===
+    RegisterRequest:
+      type: object
+      required: [email, password, name, nickname]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+        nickname:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        expiresIn:
+          type: integer
+          description: Access Token 만료 시간 (초)
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+        name:
+          type: string
+        nickname:
+          type: string
+        role:
+          type: string
+          enum: [SUPER_ADMIN, ADMIN, VIEWER]
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, BANNED]
+        profileImageUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # === 동영상 ===
+    VideoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        originalFileName:
+          type: string
+        fileSize:
+          type: integer
+          format: int64
+        thumbnailUrl:
+          type: string
+        durationSeconds:
+          type: integer
+        status:
+          type: string
+          enum: [UPLOADING, ENCODING_QUEUED, ENCODING, READY, FAILED, DELETED]
+        hlsUrl:
+          type: string
+        tags:
+          type: string
+        isPublic:
+          type: boolean
+        viewCount:
+          type: integer
+          format: int64
+        uploadedBy:
+          $ref: '#/components/schemas/UserResponse'
+        createdAt:
+          type: string
+          format: date-time
+
+    VideoUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        tags:
+          type: string
+
+    # === 재생목록 ===
+    PlaylistRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isPublic:
+          type: boolean
+
+    PlaylistResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        thumbnailUrl:
+          type: string
+        isPublic:
+          type: boolean
+        videoCount:
+          type: integer
+        totalDurationSeconds:
+          type: integer
+        createdBy:
+          $ref: '#/components/schemas/UserResponse'
+        createdAt:
+          type: string
+          format: date-time
+
+    PlaylistDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/PlaylistResponse'
+        - type: object
+          properties:
+            videos:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlaylistVideoResponse'
+
+    PlaylistVideoResponse:
+      type: object
+      properties:
+        sortOrder:
+          type: integer
+        video:
+          $ref: '#/components/schemas/VideoResponse'
+
+    ReorderRequest:
+      type: object
+      required: [videoIds]
+      properties:
+        videoIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+
+    # === 사용자 관리 ===
+    RoleChangeRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [SUPER_ADMIN, ADMIN, VIEWER]
+
+    StatusChangeRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, BANNED]
+
+paths:
+  # === 인증 API ===
+  /api/v1/auth/register:
+    post:
+      tags: [인증]
+      summary: 회원가입
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: 회원가입 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '409':
+          description: 이메일 중복
+
+  /api/v1/auth/login:
+    post:
+      tags: [인증]
+      summary: 로그인
+      description: Access Token은 응답 body, Refresh Token은 HttpOnly 쿠키로 발급
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 로그인 성공
+          headers:
+            Set-Cookie:
+              description: Refresh Token (HttpOnly)
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: 인증 실패
+
+  /api/v1/auth/refresh:
+    post:
+      tags: [인증]
+      summary: 토큰 갱신
+      description: 쿠키의 Refresh Token으로 새 Access Token 발급
+      responses:
+        '200':
+          description: 갱신 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Refresh Token 만료 또는 없음
+
+  /api/v1/auth/me:
+    get:
+      tags: [인증]
+      summary: 현재 사용자 정보
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  # === 사용자 관리 API (SUPER_ADMIN) ===
+  /api/v1/admin/users:
+    get:
+      tags: [사용자 관리]
+      summary: 사용자 목록
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/UserResponse'
+
+  /api/v1/admin/users/{userId}/role:
+    patch:
+      tags: [사용자 관리]
+      summary: 역할 변경
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleChangeRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  /api/v1/admin/users/{userId}/status:
+    patch:
+      tags: [사용자 관리]
+      summary: 상태 변경
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusChangeRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  /api/v1/admin/users/{userId}:
+    delete:
+      tags: [사용자 관리]
+      summary: 사용자 삭제
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 삭제 성공
+
+  # === 동영상 관리 API (ADMIN+) ===
+  /api/v1/admin/videos:
+    post:
+      tags: [동영상 관리]
+      summary: 동영상 업로드
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, title]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                title:
+                  type: string
+                description:
+                  type: string
+                tags:
+                  type: string
+      responses:
+        '201':
+          description: 업로드 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoResponse'
+    get:
+      tags: [동영상 관리]
+      summary: 관리자 영상 목록
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [UPLOADING, ENCODING_QUEUED, ENCODING, READY, FAILED, DELETED]
+        - name: keyword
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VideoResponse'
+
+  /api/v1/admin/videos/{videoId}:
+    get:
+      tags: [동영상 관리]
+      summary: 상세 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoResponse'
+    put:
+      tags: [동영상 관리]
+      summary: 메타데이터 수정
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoUpdateRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoResponse'
+    delete:
+      tags: [동영상 관리]
+      summary: 삭제 (soft delete)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 삭제 성공
+
+  /api/v1/admin/videos/{videoId}/visibility:
+    patch:
+      tags: [동영상 관리]
+      summary: 공개/비공개 전환
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoResponse'
+
+  /api/v1/admin/videos/{videoId}/encoding-status:
+    get:
+      tags: [동영상 관리]
+      summary: 인코딩 진행 상태
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videoId:
+                    type: integer
+                    format: int64
+                  status:
+                    type: string
+
+  # === 재생목록 관리 API (ADMIN+) ===
+  /api/v1/admin/playlists:
+    post:
+      tags: [재생목록 관리]
+      summary: 재생목록 생성
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistRequest'
+      responses:
+        '201':
+          description: 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistResponse'
+    get:
+      tags: [재생목록 관리]
+      summary: 재생목록 목록
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PlaylistResponse'
+
+  /api/v1/admin/playlists/{playlistId}:
+    get:
+      tags: [재생목록 관리]
+      summary: 상세 (영상 목록 포함)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: playlistId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetailResponse'
+    put:
+      tags: [재생목록 관리]
+      summary: 수정
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: playlistId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistResponse'
+    delete:
+      tags: [재생목록 관리]
+      summary: 삭제
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: playlistId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 삭제 성공
+
+  /api/v1/admin/playlists/{playlistId}/videos:
+    post:
+      tags: [재생목록 관리]
+      summary: 영상 추가
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: playlistId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [videoId]
+              properties:
+                videoId:
+                  type: integer
+                  format: int64
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetailResponse'
+
+  /api/v1/admin/playlists/{playlistId}/videos/{videoId}:
+    delete:
+      tags: [재생목록 관리]
+      summary: 영상 제거
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: playlistId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 제거 성공
+
+  /api/v1/admin/playlists/{playlistId}/videos/reorder:
+    put:
+      tags: [재생목록 관리]
+      summary: 순서 변경
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: playlistId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetailResponse'
+
+  # === 시청자 영상 API (VIEWER+) ===
+  /api/v1/videos:
+    get:
+      tags: [시청자]
+      summary: 공개 영상 목록
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: keyword
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VideoResponse'
+
+  /api/v1/videos/{videoId}:
+    get:
+      tags: [시청자]
+      summary: 영상 재생 정보
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoResponse'
+
+  # === 시청자 재생목록 API (VIEWER+) ===
+  /api/v1/playlists:
+    get:
+      tags: [시청자]
+      summary: 공개 재생목록 목록
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PlaylistResponse'
+
+  /api/v1/playlists/{playlistId}:
+    get:
+      tags: [시청자]
+      summary: 재생목록 상세
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: playlistId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetailResponse'
