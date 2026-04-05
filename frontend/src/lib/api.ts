@@ -9,6 +9,9 @@ export function setAccessToken(token: string | null) {
 }
 
 export function getAccessToken(): string | null {
+  if (!accessToken && typeof window !== 'undefined') {
+    accessToken = localStorage.getItem('accessToken');
+  }
   return accessToken;
 }
 

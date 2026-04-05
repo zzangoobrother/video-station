@@ -90,22 +90,22 @@
 
 ## Phase 3: 재생목록
 
-### 3.1 재생목록 CRUD API (`/api/v1/admin/playlists`)
-- [ ] POST `/` - 재생목록 생성
-- [ ] GET `/` - 재생목록 목록
-- [ ] GET `/{playlistId}` - 상세 (영상 목록 + 순서 포함)
-- [ ] PUT `/{playlistId}` - 수정 (이름, 설명, 공개 여부)
-- [ ] DELETE `/{playlistId}` - 삭제
+### 3.1 재생목록 CRUD API (`/api/v1/admin/playlists`) ✅ 8 tests
+- [x] POST `/` - 재생목록 생성
+- [x] GET `/` - 재생목록 목록
+- [x] GET `/{playlistId}` - 상세 (영상 목록 + 순서 포함)
+- [x] PUT `/{playlistId}` - 수정 (이름, 설명, 공개 여부)
+- [x] DELETE `/{playlistId}` - 삭제
 
-### 3.2 재생목록 영상 관리 API
-- [ ] POST `/{playlistId}/videos` - 영상 추가
-- [ ] DELETE `/{playlistId}/videos/{videoId}` - 영상 제거
-- [ ] PUT `/{playlistId}/videos/reorder` - 순서 변경
+### 3.2 재생목록 영상 관리 API ✅ PlaylistService 10 tests
+- [x] POST `/{playlistId}/videos` - 영상 추가
+- [x] DELETE `/{playlistId}/videos/{videoId}` - 영상 제거
+- [x] PUT `/{playlistId}/videos/reorder` - 순서 변경
 
 ### 3.3 프론트엔드: 재생목록 관리
-- [ ] 재생목록 목록 페이지
-- [ ] 재생목록 생성/수정 폼
-- [ ] 재생목록 에디터 (영상 추가/제거, 드래그앤드롭 순서 변경)
+- [x] 재생목록 목록 페이지
+- [x] 재생목록 생성/수정 폼
+- [x] 재생목록 에디터 (영상 추가/제거, 순서 변경 ▲▼)
 
 ---
 
