@@ -32,12 +32,12 @@ public class AuthService {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        User user = User.builder()
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .name(request.name())
-                .nickname(request.nickname())
-                .build();
+        User user = User.create(
+                request.email(),
+                passwordEncoder.encode(request.password()),
+                request.name(),
+                request.nickname()
+        );
 
         return UserResponse.from(userRepository.save(user));
     }

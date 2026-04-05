@@ -18,13 +18,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,13 +42,20 @@ class AuthServiceTest {
     @Mock
     private JwtProvider jwtProvider;
 
+    private User createUser(Long id, String email, String password, UserStatus status) {
+        User user = User.create(email, password, "홍길동", "길동이");
+        ReflectionTestUtils.setField(user, "id", id);
+        if (status != UserStatus.ACTIVE) {
+            user.changeStatus(status);
+        }
+        return user;
+    }
+
     @Test
     @DisplayName("회원가입 성공")
     void registerSuccess() {
         var request = new RegisterRequest("test@test.com", "password123", "홍길동", "길동이");
-        var savedUser = User.builder()
-                .id(1L).email("test@test.com").password("encoded").name("홍길동").nickname("길동이")
-                .role(UserRole.VIEWER).status(UserStatus.ACTIVE).build();
+        var savedUser = createUser(1L, "test@test.com", "encoded", UserStatus.ACTIVE);
 
         given(userRepository.existsByEmail("test@test.com")).willReturn(false);
         given(passwordEncoder.encode("password123")).willReturn("encoded");
@@ -75,9 +82,7 @@ class AuthServiceTest {
     @DisplayName("로그인 성공")
     void loginSuccess() {
         var request = new LoginRequest("test@test.com", "password123");
-        var user = User.builder()
-                .id(1L).email("test@test.com").password("encoded").name("홍길동").nickname("길동이")
-                .role(UserRole.VIEWER).status(UserStatus.ACTIVE).build();
+        var user = createUser(1L, "test@test.com", "encoded", UserStatus.ACTIVE);
 
         given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("password123", "encoded")).willReturn(true);
@@ -94,9 +99,7 @@ class AuthServiceTest {
     @DisplayName("로그인 실패 - 잘못된 비밀번호")
     void loginWrongPassword() {
         var request = new LoginRequest("test@test.com", "wrong");
-        var user = User.builder()
-                .id(1L).email("test@test.com").password("encoded").name("홍길동").nickname("길동이")
-                .role(UserRole.VIEWER).status(UserStatus.ACTIVE).build();
+        var user = createUser(1L, "test@test.com", "encoded", UserStatus.ACTIVE);
 
         given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("wrong", "encoded")).willReturn(false);
@@ -110,9 +113,7 @@ class AuthServiceTest {
     @DisplayName("로그인 실패 - 비활성 계정")
     void loginDisabledAccount() {
         var request = new LoginRequest("test@test.com", "password123");
-        var user = User.builder()
-                .id(1L).email("test@test.com").password("encoded").name("홍길동").nickname("길동이")
-                .role(UserRole.VIEWER).status(UserStatus.BANNED).build();
+        var user = createUser(1L, "test@test.com", "encoded", UserStatus.BANNED);
 
         given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("password123", "encoded")).willReturn(true);
@@ -125,9 +126,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("토큰 갱신 성공")
     void refreshSuccess() {
-        var user = User.builder()
-                .id(1L).email("test@test.com").password("encoded").name("홍길동").nickname("길동이")
-                .role(UserRole.VIEWER).status(UserStatus.ACTIVE).build();
+        var user = createUser(1L, "test@test.com", "encoded", UserStatus.ACTIVE);
 
         given(jwtProvider.validateToken("refresh-token")).willReturn(true);
         given(jwtProvider.getUserId("refresh-token")).willReturn(1L);

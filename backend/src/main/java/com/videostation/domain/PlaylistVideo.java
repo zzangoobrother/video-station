@@ -1,14 +1,14 @@
 package com.videostation.domain;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "playlist_videos")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class PlaylistVideo extends BaseEntity {
 
     @Id
@@ -25,6 +25,16 @@ public class PlaylistVideo extends BaseEntity {
 
     @Column(nullable = false)
     private Integer sortOrder;
+
+    private PlaylistVideo(Playlist playlist, Video video, int sortOrder) {
+        this.playlist = playlist;
+        this.video = video;
+        this.sortOrder = sortOrder;
+    }
+
+    public static PlaylistVideo create(Playlist playlist, Video video, int sortOrder) {
+        return new PlaylistVideo(playlist, video, sortOrder);
+    }
 
     public void changeSortOrder(int sortOrder) {
         this.sortOrder = sortOrder;

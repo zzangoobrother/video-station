@@ -1,7 +1,9 @@
 package com.videostation.domain;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,8 +12,6 @@ import java.util.List;
 @Table(name = "playlists")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class Playlist extends BaseEntity {
 
     @Id
@@ -26,7 +26,6 @@ public class Playlist extends BaseEntity {
 
     private String thumbnailUrl;
 
-    @Builder.Default
     private Boolean isPublic = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,8 +34,18 @@ public class Playlist extends BaseEntity {
 
     @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder ASC")
-    @Builder.Default
     private List<PlaylistVideo> playlistVideos = new ArrayList<>();
+
+    private Playlist(String name, String description, Boolean isPublic, User createdByUser) {
+        this.name = name;
+        this.description = description;
+        this.isPublic = isPublic;
+        this.createdByUser = createdByUser;
+    }
+
+    public static Playlist create(String name, String description, Boolean isPublic, User createdByUser) {
+        return new Playlist(name, description, isPublic, createdByUser);
+    }
 
     public void update(String name, String description, Boolean isPublic) {
         this.name = name;

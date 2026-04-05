@@ -3,14 +3,14 @@ package com.videostation.domain;
 import com.videostation.domain.constant.UserRole;
 import com.videostation.domain.constant.UserStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class User extends BaseEntity {
 
     @Id
@@ -31,15 +31,24 @@ public class User extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private UserRole role = UserRole.VIEWER;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
     private String profileImageUrl;
+
+    private User(String email, String password, String name, String nickname) {
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.nickname = nickname;
+    }
+
+    public static User create(String email, String password, String name, String nickname) {
+        return new User(email, password, name, nickname);
+    }
 
     public void changeRole(UserRole role) {
         this.role = role;

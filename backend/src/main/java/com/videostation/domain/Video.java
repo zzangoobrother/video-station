@@ -2,14 +2,14 @@ package com.videostation.domain;
 
 import com.videostation.domain.constant.VideoStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "videos")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class Video extends BaseEntity {
 
     @Id
@@ -34,7 +34,6 @@ public class Video extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private VideoStatus status = VideoStatus.UPLOADING;
 
     private String hlsPath;
@@ -43,15 +42,29 @@ public class Video extends BaseEntity {
 
     private String tags;
 
-    @Builder.Default
     private Boolean isPublic = false;
 
-    @Builder.Default
     private Long viewCount = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by", nullable = false)
     private User uploadedBy;
+
+    private Video(String title, String description, String tags,
+                  String originalFilePath, String originalFileName, Long fileSize, User uploadedBy) {
+        this.title = title;
+        this.description = description;
+        this.tags = tags;
+        this.originalFilePath = originalFilePath;
+        this.originalFileName = originalFileName;
+        this.fileSize = fileSize;
+        this.uploadedBy = uploadedBy;
+    }
+
+    public static Video create(String title, String description, String tags,
+                               String originalFilePath, String originalFileName, Long fileSize, User uploadedBy) {
+        return new Video(title, description, tags, originalFilePath, originalFileName, fileSize, uploadedBy);
+    }
 
     public void updateMetadata(String title, String description, String tags) {
         this.title = title;

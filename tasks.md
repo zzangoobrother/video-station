@@ -53,38 +53,38 @@
 ## Phase 2: 동영상 관리
 
 ### 2.1 동영상 업로드
-- [ ] 동영상 업로드 API - POST `/api/v1/admin/videos` (multipart)
-- [ ] 원본 파일 로컬 디스크 저장 (/data/videos/originals/)
-- [ ] Video 엔티티 생성 (status: UPLOADING → ENCODING_QUEUED)
-- [ ] 파일 크기, 원본 파일명 메타데이터 저장
+- [x] 동영상 업로드 API - POST `/api/v1/admin/videos` (multipart)
+- [x] 원본 파일 로컬 디스크 저장 (FileStorageService)
+- [x] Video 엔티티 생성 (status: UPLOADING → ENCODING_QUEUED)
+- [x] 파일 크기, 원본 파일명 메타데이터 저장
 
 ### 2.2 FFmpeg 인코딩 파이프라인
-- [ ] FFmpegEncoder - FFmpeg 프로세스 실행 (1080p HLS 인코딩)
-- [ ] 썸네일 자동 추출 (영상 30초 지점)
-- [ ] 영상 길이(durationSeconds) 추출
-- [ ] EncodingQueue - 동시 인코딩 1~2개 제한, 대기열 관리
-- [ ] EncodingEventListener - 인코딩 완료/실패 이벤트 처리 → Video status 갱신
-- [ ] 비동기 실행 (@Async 또는 스레드풀)
+- [x] FFmpegEncoder - FFmpeg 프로세스 실행 (1080p HLS 인코딩) ✅ 3 tests
+- [x] 썸네일 자동 추출 (영상 30초 지점)
+- [x] 영상 길이(durationSeconds) 추출
+- [x] EncodingQueue - 동시 인코딩 1~2개 제한 (Semaphore), @Async
+- [x] EncodingEventListener - 인코딩 완료/실패 이벤트 처리 ✅ 3 tests
+- [x] 비동기 실행 (@Async)
 
 ### 2.3 Object Storage 백업
-- [ ] NCP Object Storage 클라이언트 설정 (S3 호환 API)
-- [ ] 업로드 완료 후 비동기로 원본 백업
-- [ ] objectStorageKey 필드 갱신
+- [x] NCP Object Storage 클라이언트 설정 (S3 호환 API)
+- [x] 업로드 완료 후 비동기로 원본 백업
+- [x] objectStorageKey 필드 갱신
 
-### 2.4 동영상 CRUD API (`/api/v1/admin/videos`)
-- [ ] GET `/` - 관리자 영상 목록 (페이징, 상태 필터, 검색)
-- [ ] GET `/{videoId}` - 상세 조회
-- [ ] PUT `/{videoId}` - 메타데이터 수정 (제목, 설명, 태그)
-- [ ] DELETE `/{videoId}` - 삭제 (soft delete, status → DELETED)
-- [ ] PATCH `/{videoId}/visibility` - 공개/비공개 전환
-- [ ] GET `/{videoId}/encoding-status` - 인코딩 진행 상태
+### 2.4 동영상 CRUD API (`/api/v1/admin/videos`) ✅ 8 tests
+- [x] GET `/` - 관리자 영상 목록 (페이징, 상태 필터, 검색)
+- [x] GET `/{videoId}` - 상세 조회
+- [x] PUT `/{videoId}` - 메타데이터 수정 (제목, 설명, 태그)
+- [x] DELETE `/{videoId}` - 삭제 (soft delete, status → DELETED)
+- [x] PATCH `/{videoId}/visibility` - 공개/비공개 전환
+- [x] GET `/{videoId}/encoding-status` - 인코딩 진행 상태
 
 ### 2.5 프론트엔드: 동영상 관리
-- [ ] 어드민 레이아웃 (사이드바 + 헤더)
-- [ ] 동영상 업로드 페이지 (드래그앤드롭, 업로드 진행률)
-- [ ] 동영상 목록 페이지 (테이블, 상태 배지, 페이징)
-- [ ] 동영상 상세/수정 페이지
-- [ ] 인코딩 상태 표시 (폴링으로 상태 갱신)
+- [x] 어드민 레이아웃 (사이드바 + 헤더)
+- [x] 동영상 업로드 페이지 (드래그앤드롭)
+- [x] 동영상 목록 페이지 (테이블, 상태 배지, 페이징)
+- [x] 동영상 상세/수정 페이지
+- [x] 인코딩 상태 표시 (폴링으로 상태 갱신)
 
 ---
 

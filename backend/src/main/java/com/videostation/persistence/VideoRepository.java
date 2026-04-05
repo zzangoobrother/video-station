@@ -13,4 +13,6 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     Page<Video> findByIsPublicTrueAndStatus(VideoStatus status, Pageable pageable);
 
     Page<Video> findByIsPublicTrueAndStatusAndTitleContaining(VideoStatus status, String keyword, Pageable pageable);
+
+    Page<Video> findByTitleContaining(String keyword, Pageable pageable);
 }
