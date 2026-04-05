@@ -1,0 +1,68 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: video-station-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: video_station
+      MYSQL_USER: ${DB_USERNAME:-videostation}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-videostation1234}
+      TZ: Asia/Seoul
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  backend:
+    build: ./backend
+    container_name: video-station-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/video_station?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      DB_USERNAME: ${DB_USERNAME:-videostation}
+      DB_PASSWORD: ${DB_PASSWORD:-videostation1234}
+      JWT_SECRET: ${JWT_SECRET}
+      STORAGE_ORIGINALS: ${STORAGE_ORIGINALS:-/data/videos/originals}
+      STORAGE_ENCODED: ${STORAGE_ENCODED:-/data/videos/encoded}
+      STORAGE_THUMBNAILS: ${STORAGE_THUMBNAILS:-/data/videos/thumbnails}
+      ENCODING_MAX_CONCURRENT: ${ENCODING_MAX_CONCURRENT:-2}
+      NCP_OS_ENABLED: ${NCP_OS_ENABLED:-false}
+      NCP_OS_ENDPOINT: ${NCP_OS_ENDPOINT:-}
+      NCP_OS_REGION: ${NCP_OS_REGION:-}
+      NCP_OS_ACCESS_KEY: ${NCP_OS_ACCESS_KEY:-}
+      NCP_OS_SECRET_KEY: ${NCP_OS_SECRET_KEY:-}
+      NCP_OS_BUCKET: ${NCP_OS_BUCKET:-}
+    volumes:
+      - video-data:/data/videos
+
+  frontend:
+    build: ./frontend
+    container_name: video-station-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: video-station-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    volumes:
+      - ./backend/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - video-data:/data/videos:ro
+
+volumes:
+  mysql-data:
+  video-data:

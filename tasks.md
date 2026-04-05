@@ -139,20 +139,20 @@
 
 ## Phase 5: 관리 및 마무리
 
-### 5.1 사용자 관리 (`/api/v1/admin/users`) - SUPER_ADMIN
-- [ ] GET `/` - 사용자 목록 (페이징)
-- [ ] PATCH `/{userId}/role` - 역할 변경
-- [ ] PATCH `/{userId}/status` - 상태 변경 (정지/활성)
-- [ ] DELETE `/{userId}` - 사용자 삭제
-- [ ] 프론트엔드: 사용자 관리 페이지 (목록, 역할/상태 변경)
+### 5.1 사용자 관리 (`/api/v1/admin/users`) - SUPER_ADMIN ✅ 5+5 tests
+- [x] GET `/` - 사용자 목록 (페이징)
+- [x] PATCH `/{userId}/role` - 역할 변경
+- [x] PATCH `/{userId}/status` - 상태 변경 (정지/활성)
+- [x] DELETE `/{userId}` - 사용자 삭제
+- [x] 프론트엔드: 사용자 관리 페이지 (목록, 역할/상태 변경)
 
 ### 5.2 에러 핸들링 및 로깅
-- [ ] 백엔드 로깅 설정 (Logback)
-- [ ] 프론트엔드 에러 바운더리
-- [ ] API 에러 응답 일관성 검토
+- [x] 백엔드 로깅 설정 (Logback, 프로필별 콘솔/파일)
+- [x] 프론트엔드 에러 바운더리
+- [x] API 에러 응답 일관성 검토
 
 ### 5.3 배포 준비
-- [ ] Backend Dockerfile 작성
-- [ ] Frontend Dockerfile 작성
-- [ ] docker-compose.yml 통합 (MySQL + Backend + Frontend + Nginx)
-- [ ] 환경변수 분리 (.env)
+- [x] Backend Dockerfile 작성
+- [x] Frontend Dockerfile 작성 (standalone output)
+- [x] docker-compose.yml 통합 (MySQL + Backend + Frontend + Nginx)
+- [x] 환경변수 분리 (.env.example)
