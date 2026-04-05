@@ -23,6 +23,7 @@ export default function ViewerLayout({ children }: { children: React.ReactNode }
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/videos" className="text-lg font-bold">Video Station</Link>
           <nav className="flex items-center gap-4">
+            <Link href="/live" className="text-sm hover:text-blue-600 font-semibold">라이브</Link>
             <Link href="/videos" className="text-sm hover:text-blue-600">영상</Link>
             <Link href="/playlists" className="text-sm hover:text-blue-600">재생목록</Link>
             {user.role !== 'VIEWER' && (

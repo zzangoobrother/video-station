@@ -29,6 +29,8 @@ video-station/
 │       ├── persistence/   # Repository
 │       ├── global/        # Security, Config, Error, Filter
 │       ├── encoding/      # FFmpeg 인코딩
+│       ├── broadcast/     # Pseudo-Live 방송 (StateManager, Scheduler)
+│       ├── websocket/     # 방송 상태 WebSocket 핸들러
 │       └── event/         # 도메인 이벤트
 └── frontend/         # Next.js
     └── src/

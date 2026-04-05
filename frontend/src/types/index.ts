@@ -83,3 +83,37 @@ export interface PlaylistVideoResponse {
 export interface PlaylistDetailResponse extends PlaylistResponse {
   videos: PlaylistVideoResponse[];
 }
+
+// === 채널 / 방송 ===
+export type ChannelStatus = 'IDLE' | 'LIVE' | 'PAUSED' | 'SCHEDULED';
+export type BroadcastStatus = 'IDLE' | 'LIVE' | 'PAUSED' | 'ENDED';
+
+export interface ChannelResponse {
+  id: number;
+  name: string;
+  description: string;
+  thumbnailUrl: string | null;
+  status: ChannelStatus;
+  owner: UserResponse;
+  createdAt: string;
+}
+
+export interface BroadcastVideoInfo {
+  id: number;
+  title: string;
+  hlsUrl: string | null;
+  durationSeconds: number | null;
+  thumbnailUrl: string | null;
+}
+
+export interface BroadcastStateResponse {
+  broadcastId: number;
+  status: BroadcastStatus;
+  currentVideo: BroadcastVideoInfo | null;
+  nextVideo: BroadcastVideoInfo | null;
+  offsetSeconds: number;
+  currentVideoIndex: number;
+  totalVideosInPlaylist: number;
+  loopPlaylist: boolean;
+  playlistName: string;
+}
