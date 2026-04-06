@@ -156,3 +156,58 @@
 - [x] Frontend Dockerfile 작성 (standalone output)
 - [x] docker-compose.yml 통합 (MySQL + Backend + Frontend + Nginx)
 - [x] 환경변수 분리 (.env.example)
+
+---
+
+## Phase 6: 방송 시스템 (Pseudo-Live)
+
+### 6.1 DB 엔티티
+- [ ] Channel 엔티티 + ChannelStatus enum (IDLE, LIVE, PAUSED, SCHEDULED)
+- [ ] Broadcast 엔티티 + BroadcastStatus enum (IDLE, LIVE, PAUSED, ENDED)
+- [ ] BroadcastSchedule 엔티티 + ScheduleStatus enum (PENDING, ACTIVE, COMPLETED, CANCELLED)
+- [ ] ChannelRepository, BroadcastRepository, BroadcastScheduleRepository
+
+### 6.2 방송 핵심 로직
+- [ ] BroadcastStateManager (인메모리 캐시 + DB 동시 상태 관리)
+  - offset 계산: `현재시각 - currentVideoStartedAt - totalPausedSeconds`
+  - 일시정지/재개 처리
+  - 서버 재시작 시 DB에서 LIVE/PAUSED 방송 복구
+- [ ] BroadcastScheduler (1초 간격 스케줄러)
+  - 자동 영상 전환 (현재 영상 종료 감지)
+  - loopPlaylist 반복 재생 처리
+  - 재생목록 끝 도달 시 방송 종료
+
+### 6.3 채널/방송 제어 API (`/api/v1/channels`) - ADMIN+
+- [ ] POST `/` - 채널 생성 (SUPER_ADMIN)
+- [ ] GET `/` - 채널 목록
+- [ ] GET `/{channelId}` - 채널 상태
+- [ ] POST `/{channelId}/broadcast/start` - 방송 시작
+- [ ] POST `/{channelId}/broadcast/stop` - 방송 종료
+- [ ] POST `/{channelId}/broadcast/pause` - 일시정지
+- [ ] POST `/{channelId}/broadcast/resume` - 재개
+- [ ] POST `/{channelId}/broadcast/next` - 다음 영상
+- [ ] POST `/{channelId}/broadcast/previous` - 이전 영상
+- [ ] POST `/{channelId}/broadcast/jump/{index}` - 특정 영상으로 이동
+- [ ] GET `/{channelId}/broadcast/state` - 현재 방송 상태
+
+### 6.4 WebSocket 실시간 상태 푸시
+- [ ] WebSocket 설정 (WebSocketConfig)
+- [ ] BroadcastWebSocketHandler (방송 상태 변경 시 전체 시청자에게 푸시)
+- [ ] WebSocket 메시지 DTO (BROADCAST_STATE 타입)
+
+### 6.5 시청자 라이브 API (`/api/v1/viewer`)
+- [ ] GET `/live` - 현재 방송 정보 (HLS URL + offset + 메타데이터)
+- [ ] GET `/schedule` - 예약 방송 일정
+
+### 6.6 프론트엔드: 방송 제어 패널 (어드민)
+- [ ] 채널 목록/생성 페이지
+- [ ] 방송 제어 패널 (시작/정지/일시정지/재개/이전/다음/점프)
+- [ ] 현재 방송 상태 실시간 표시
+- [ ] 재생목록 선택 + 반복 재생 옵션
+
+### 6.7 프론트엔드: 라이브 시청 페이지 (시청자)
+- [ ] useBroadcastState 훅 (WebSocket 방송 상태 수신)
+- [ ] 라이브 시청 페이지 (동기화 재생 - offset 기반 seek)
+- [ ] 방송 상태 표시 (LIVE/PAUSED/IDLE)
+- [ ] 자동 영상 전환 (WebSocket 메시지로 다음 영상 로드)
+- [ ] 어드민 사이드바에 방송 메뉴 추가

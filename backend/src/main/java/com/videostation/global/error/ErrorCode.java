@@ -22,6 +22,18 @@ public enum ErrorCode {
     // 재생목록
     PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYLIST_001", "재생목록을 찾을 수 없습니다"),
 
+    // 채널
+    CHANNEL_NOT_FOUND(HttpStatus.NOT_FOUND, "CHANNEL_001", "채널을 찾을 수 없습니다"),
+    DUPLICATE_CHANNEL_NAME(HttpStatus.CONFLICT, "CHANNEL_002", "이미 사용 중인 채널명입니다"),
+
+    // 방송
+    BROADCAST_NOT_FOUND(HttpStatus.NOT_FOUND, "BROADCAST_001", "방송을 찾을 수 없습니다"),
+    BROADCAST_ALREADY_LIVE(HttpStatus.CONFLICT, "BROADCAST_002", "이미 진행 중인 방송이 있습니다"),
+    BROADCAST_NOT_LIVE(HttpStatus.BAD_REQUEST, "BROADCAST_003", "현재 진행 중인 방송이 없습니다"),
+    BROADCAST_NOT_PAUSED(HttpStatus.BAD_REQUEST, "BROADCAST_004", "일시정지 상태가 아닙니다"),
+    BROADCAST_INVALID_INDEX(HttpStatus.BAD_REQUEST, "BROADCAST_005", "유효하지 않은 영상 인덱스입니다"),
+    PLAYLIST_EMPTY(HttpStatus.BAD_REQUEST, "BROADCAST_006", "재생목록에 재생 가능한 영상이 없습니다"),
+
     // 파일
     FILE_STORAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_001", "파일 저장에 실패했습니다"),
 

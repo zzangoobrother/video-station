@@ -53,6 +53,12 @@ public class Playlist extends BaseEntity {
         this.isPublic = isPublic;
     }
 
+    public List<PlaylistVideo> getReadyVideos() {
+        return playlistVideos.stream()
+                .filter(pv -> pv.getVideo().getStatus() == com.videostation.domain.constant.VideoStatus.READY)
+                .toList();
+    }
+
     public int getTotalDurationSeconds() {
         return playlistVideos.stream()
                 .filter(pv -> pv.getVideo().getDurationSeconds() != null)

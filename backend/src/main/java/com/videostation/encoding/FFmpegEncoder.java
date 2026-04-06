@@ -26,9 +26,18 @@ public class FFmpegEncoder {
         String segmentPattern = outputDir + "/segment_%03d.ts";
 
         return new String[]{
-                ffmpegPath, "-i", inputPath,
+                ffmpegPath,
+                "-i", inputPath,
+                // 오디오가 없는 영상용 무음 트랙
+                "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+                // 영상: 1080p 스케일링, 30fps, 키프레임 2초 간격
+                "-vf", "scale=-2:1080",
                 "-c:v", "libx264", "-preset", "medium", "-crf", "23",
+                "-r", "30",
+                "-g", "60", "-keyint_min", "60", "-sc_threshold", "0",
+                // 오디오: AAC (원본 오디오 있으면 사용, 없으면 무음)
                 "-c:a", "aac", "-b:a", "128k",
+                "-shortest",
                 "-hls_time", "6", "-hls_list_size", "0",
                 "-hls_segment_filename", segmentPattern,
                 "-f", "hls", outputFile

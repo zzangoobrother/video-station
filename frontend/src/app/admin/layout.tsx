@@ -9,6 +9,7 @@ import type { UserResponse } from '@/types';
 const navItems: { href: string; label: string; requiredRole?: string }[] = [
   { href: '/admin/videos', label: '동영상 관리' },
   { href: '/admin/playlists', label: '재생목록 관리' },
+  { href: '/admin/broadcast', label: '방송 제어' },
   { href: '/admin/users', label: '사용자 관리', requiredRole: 'SUPER_ADMIN' },
 ];
 

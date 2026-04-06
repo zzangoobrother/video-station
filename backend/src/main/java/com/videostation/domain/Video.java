@@ -94,4 +94,12 @@ public class Video extends BaseEntity {
     public void updateObjectStorageKey(String key) {
         this.objectStorageKey = key;
     }
+
+    public String getHlsUrl() {
+        return hlsPath != null ? "/hls/" + id + "/master.m3u8" : null;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailPath != null ? "/thumbnails/" + id + ".jpg" : null;
+    }
 }

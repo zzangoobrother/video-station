@@ -20,7 +20,7 @@ export default function LoginPage() {
       setAccessToken(data.accessToken);
       router.push('/videos');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '로그인 실패');
+      setError(err instanceof Error ? `${err.name}: ${err.message}` : JSON.stringify(err));
     }
   };
 

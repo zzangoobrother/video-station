@@ -19,8 +19,10 @@ export function useHlsPlayer(hlsUrl: string | null) {
       hls.loadSource(hlsUrl);
       hls.attachMedia(video);
       hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) {
-          setError('영상 로드에 실패했습니다.');
+        if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          hls.startLoad();
+        } else if (data.fatal && data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          hls.recoverMediaError();
         }
       });
 

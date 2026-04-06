@@ -8,6 +8,7 @@ import com.videostation.persistence.VideoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
@@ -27,7 +28,7 @@ public class EncodingEventListener {
         encodingQueue.enqueue(event.videoId(), event.originalFilePath());
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onEncodingCompleted(EncodingCompletedEvent event) {
         log.info("인코딩 완료 이벤트 수신: videoId={}", event.videoId());
@@ -36,7 +37,7 @@ public class EncodingEventListener {
         );
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onEncodingFailed(EncodingFailedEvent event) {
         log.error("인코딩 실패 이벤트 수신: videoId={}, reason={}", event.videoId(), event.reason());

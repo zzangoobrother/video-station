@@ -28,9 +28,9 @@ jwt:
   refresh-token-expiry: 604800000
 
 storage:
-  originals-path: ${STORAGE_ORIGINALS:/data/videos/originals}
-  encoded-path: ${STORAGE_ENCODED:/data/videos/encoded}
-  thumbnails-path: ${STORAGE_THUMBNAILS:/data/videos/thumbnails}
+  originals-path: ${STORAGE_ORIGINALS:/Users/choeseongang/data/videos/originals}
+  encoded-path: ${STORAGE_ENCODED:/Users/choeseongang/data/videos/encoded}
+  thumbnails-path: ${STORAGE_THUMBNAILS:/Users/choeseongang/data/videos/thumbnails}
 
 encoding:
   max-concurrent: 2
