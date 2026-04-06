@@ -1,91 +1,91 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
 import { apiGet } from '@/lib/api';
 import { formatDuration } from '@/lib/format';
 import { useBroadcastState } from '@/hooks/useBroadcastState';
+import FullscreenPlayer from '@/components/video/FullscreenPlayer';
 import type { BroadcastStateResponse } from '@/types';
 
 export default function LivePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const currentVideoIdRef = useRef<number | null>(null);
   const { state: wsState } = useBroadcastState();
   const [initialState, setInitialState] = useState<BroadcastStateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // 현재 표시 상태: WebSocket 상태가 있으면 우선, 없으면 초기 상태
   const broadcast = wsState ?? initialState;
+  const broadcastRef = useRef(broadcast);
+  broadcastRef.current = broadcast;
 
-  // 초기 방송 상태 로드
   useEffect(() => {
     apiGet<BroadcastStateResponse>('/api/v1/viewer/live')
       .then(setInitialState)
       .catch(() => setInitialState(null));
   }, []);
 
-  // HLS 로드 + offset seek
+  const initHls = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || hlsRef.current) return;
+    if (Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: false, maxBufferLength: 30, maxMaxBufferLength: 60 });
+      hls.attachMedia(video);
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+        else if (data.fatal && data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+      });
+      hlsRef.current = hls;
+    }
+  }, []);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !broadcast || !broadcast.currentVideo?.hlsUrl) return;
     if (broadcast.status === 'ENDED' || broadcast.status === 'IDLE') return;
 
-    // 이전 인스턴스 정리
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
+    const videoId = broadcast.currentVideo.id;
+    if (currentVideoIdRef.current === videoId) return;
+    currentVideoIdRef.current = videoId;
 
+    setError(null);
     const hlsUrl = broadcast.currentVideo.hlsUrl;
-
-    const offset = broadcast.offsetSeconds;
-    const isLive = broadcast.status === 'LIVE';
+    const offset = broadcast.offsetSeconds ?? 0;
+    const duration = broadcast.currentVideo.durationSeconds ?? 0;
+    const safeOffset = offset < duration ? offset : 0;
 
     if (Hls.isSupported()) {
-      const hls = new Hls();
-      hlsRef.current = hls;
+      initHls();
+      const hls = hlsRef.current!;
       hls.loadSource(hlsUrl);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.currentTime = offset;
-        if (isLive) {
-          video.play().catch(() => {});
-        }
-      });
-      hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) setError('영상 로드에 실패했습니다.');
-      });
+      const onManifest = () => {
+        video.currentTime = safeOffset;
+        video.muted = true;
+        video.play().catch(() => {});
+        hls.off(Hls.Events.MANIFEST_PARSED, onManifest);
+      };
+      hls.on(Hls.Events.MANIFEST_PARSED, onManifest);
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = hlsUrl;
       video.addEventListener('loadedmetadata', () => {
-        video.currentTime = offset;
-        if (isLive) {
-          video.play().catch(() => {});
-        }
+        video.currentTime = safeOffset;
+        video.muted = true;
+        video.play().catch(() => {});
       }, { once: true });
-    } else {
-      setError('이 브라우저에서는 HLS 재생을 지원하지 않습니다.');
     }
+  }, [broadcast?.currentVideo?.id, broadcast?.status, initHls]);
 
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-    // status 변경은 별도 이펙트에서 처리 - HLS 재생성 불필요
-  }, [broadcast?.currentVideo?.id]);
-
-  // 일시정지/재개 처리
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !broadcast) return;
-    if (broadcast.status === 'PAUSED') {
-      video.pause();
-    } else if (broadcast.status === 'LIVE' && video.paused) {
-      video.play().catch(() => {});
-    }
+    if (broadcast.status === 'PAUSED') video.pause();
+    else if (broadcast.status === 'LIVE' && video.paused) video.play().catch(() => {});
   }, [broadcast?.status]);
+
+  useEffect(() => {
+    return () => { if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; } };
+  }, []);
 
   if (!broadcast || broadcast.status === 'IDLE' || broadcast.status === 'ENDED') {
     return (
@@ -100,55 +100,38 @@ export default function LivePage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-black text-white flex items-center justify-center aspect-video rounded">
-          {error}
-        </div>
-      </div>
-    );
-  }
+  const liveBadge = (
+    <div className="flex items-center gap-2">
+      <span className={`px-2 py-1 rounded text-xs font-bold ${
+        broadcast.status === 'LIVE' ? 'bg-red-500 text-white' : 'bg-yellow-400 text-gray-900'
+      }`}>
+        {broadcast.status === 'LIVE' ? 'LIVE' : '일시정지'}
+      </span>
+      <span className="text-white/70 text-sm">{broadcast.playlistName}</span>
+    </div>
+  );
+
+  const subtitle = `${broadcast.currentVideoIndex + 1} / ${broadcast.totalVideosInPlaylist} · ${formatDuration(broadcast.currentVideo?.durationSeconds)}`;
+
+  const bottomExtra = (
+    <>
+      {broadcast.nextVideo && (
+        <p className="text-white/50 text-sm">다음 영상: {broadcast.nextVideo.title}</p>
+      )}
+      {broadcast.status === 'PAUSED' && (
+        <p className="text-yellow-400 text-sm mt-1">방송이 일시정지되었습니다.</p>
+      )}
+    </>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* 상태 배지 */}
-      <div className="flex items-center gap-2 mb-3">
-        <span className={`px-2 py-1 rounded text-xs font-bold ${
-          broadcast.status === 'LIVE' ? 'bg-red-500 text-white' : 'bg-yellow-400 text-gray-900'
-        }`}>
-          {broadcast.status === 'LIVE' ? 'LIVE' : '일시정지'}
-        </span>
-        <span className="text-sm text-gray-500">{broadcast.playlistName}</span>
-      </div>
-
-      {/* 비디오 플레이어 */}
-      <video
-        ref={videoRef}
-        className="w-full aspect-video bg-black rounded"
-        controls={false}
-      />
-
-      {/* 영상 정보 */}
-      <div className="mt-4">
-        <h2 className="text-xl font-bold">{broadcast.currentVideo?.title}</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          {broadcast.currentVideoIndex + 1} / {broadcast.totalVideosInPlaylist}
-          {' · '}
-          {formatDuration(broadcast.currentVideo?.durationSeconds)}
-        </p>
-        {broadcast.nextVideo && (
-          <p className="text-sm text-gray-400 mt-2">
-            다음 영상: {broadcast.nextVideo.title}
-          </p>
-        )}
-      </div>
-
-      {broadcast.status === 'PAUSED' && (
-        <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-700">
-          방송이 일시정지되었습니다. 잠시 기다려주세요.
-        </div>
-      )}
-    </div>
+    <FullscreenPlayer
+      videoRef={videoRef}
+      title={broadcast.currentVideo?.title ?? ''}
+      subtitle={subtitle}
+      badge={liveBadge}
+      bottomExtra={bottomExtra}
+      error={error}
+    />
   );
 }

@@ -22,6 +22,7 @@ public class BroadcastStateManager {
     private final Set<Long> activeBroadcastIds = ConcurrentHashMap.newKeySet();
 
     @EventListener(ApplicationReadyEvent.class)
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public void recoverOnStartup() {
         List<Broadcast> active = broadcastRepository.findByStatusIn(
                 List.of(BroadcastStatus.LIVE, BroadcastStatus.PAUSED));
