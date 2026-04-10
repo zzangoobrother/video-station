@@ -2,11 +2,21 @@ spring:
   application:
     name: video-station
 
+  threads:
+    virtual:
+      enabled: true
+
   datasource:
     url: jdbc:mysql://localhost:3306/video_station?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
     username: ${DB_USERNAME:videostation}
     password: ${DB_PASSWORD:videostation1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 3000
+      idle-timeout: 300000
+      max-lifetime: 1200000
 
   jpa:
     hibernate:
